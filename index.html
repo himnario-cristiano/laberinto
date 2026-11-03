@@ -9,9 +9,23 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Para evitar el scroll al dibujar en pantallas táctiles */
         .touch-none {
             touch-action: none;
+        }
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; 
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563; 
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; 
         }
     </style>
 </head>
@@ -19,86 +33,109 @@
 
     <div class="max-w-6xl w-full bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col md:flex-row gap-8">
         
-        <!-- Panel de Controles -->
+        <!-- Panel de Controles Izquierdo -->
         <div class="w-full md:w-1/3 flex flex-col gap-6">
             <div>
                 <h1 class="text-3xl font-bold text-white mb-2">Laberinto 3 Caminos</h1>
-                <p class="text-gray-400 text-sm">Genera un laberinto con 1 ruta correcta y 2 trampas masivas. Dibuja encima para resolverlo, al descargar obtendrás la versión limpia.</p>
+                <p class="text-gray-400 text-sm">Genera un laberinto en formato 4:3 con 1 ruta correcta y 2 trampas. Dibuja encima para resolverlo.</p>
             </div>
 
             <div class="space-y-4">
                 <div>
                     <label for="cols" class="block text-sm font-medium text-gray-300 mb-1">Columnas (Mínimo 5)</label>
-                    <input type="number" id="cols" min="5" max="60" value="25" 
-                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-white">
+                    <input type="number" id="cols" min="5" max="60" value="28" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-white">
                 </div>
-                
                 <div>
-                    <label for="rows" class="block text-sm font-medium text-gray-300 mb-1">Filas</label>
-                    <input type="number" id="rows" min="5" max="60" value="25" 
-                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-white">
-                </div>
-
-                <div>
-                    <label for="cellSize" class="block text-sm font-medium text-gray-300 mb-1">Tamaño de celda (px)</label>
-                    <input type="number" id="cellSize" min="10" max="50" value="20" 
-                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-white">
+                    <label for="cellSize" class="block text-sm font-medium text-gray-300 mb-1">Tamaño base de celda (px)</label>
+                    <input type="number" id="cellSize" min="10" max="50" value="20" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-white">
                 </div>
             </div>
 
-            <!-- Botones de Acción -->
             <div class="flex flex-col gap-3 mt-4">
+                <button id="btnGenerate" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 shadow-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Generar Laberinto</span>
+                </button>
+                
                 <div class="flex gap-3">
-                    <button id="btnGenerate" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                        <span class="hidden sm:inline">Generar</span>
+                    <button id="btnDownloadSvg" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 shadow-lg text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>SVG (Vector)</span>
                     </button>
-                    <button id="btnDownload" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                        </svg>
-                        <span class="hidden sm:inline">Descargar</span>
+                    <button id="btnDownloadPng" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 shadow-lg text-sm" title="Exportación a 300 DPI">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>PNG (300 DPI)</span>
                     </button>
                 </div>
-                <!-- Nuevo botón de limpiar trazo -->
-                <button id="btnClearDraw" class="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
+
+                <button id="btnClearDraw" class="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 shadow-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     <span>Limpiar Trazo</span>
                 </button>
             </div>
         </div>
 
-        <!-- Área del Canvas (Doble capa) -->
-        <div class="w-full md:w-2/3 flex items-center justify-center bg-gray-900 rounded-xl border border-gray-700 p-4 overflow-hidden">
-            <div id="canvasContainer" class="relative mx-auto shadow-[0_0_20px_rgba(0,0,0,0.4)] rounded-lg">
-                <!-- Capa Base: Laberinto -->
-                <canvas id="mazeCanvas" class="absolute top-0 left-0 w-full h-full rounded-lg"></canvas>
-                <!-- Capa Superior: Dibujo interactivo -->
-                <canvas id="drawCanvas" class="absolute top-0 left-0 w-full h-full rounded-lg cursor-crosshair touch-none"></canvas>
+        <!-- Área del Canvas y Controles de Vista -->
+        <div id="canvasWrapper" class="relative w-full md:w-2/3 bg-gray-900 rounded-xl border border-gray-700 flex flex-col overflow-hidden min-h-[500px]">
+            
+            <!-- Panel Flotante Draggable & Collapsible -->
+            <div id="floatingPanel" class="absolute top-4 right-4 z-10 flex flex-col bg-gray-800/95 backdrop-blur border border-gray-600 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] overflow-hidden w-[60px] transition-all duration-300">
+                
+                <div id="dragHandle" class="w-full h-6 bg-gray-700 cursor-grab active:cursor-grabbing flex items-center justify-center border-b border-gray-600" title="Arrastrar panel">
+                    <div class="flex gap-1">
+                        <div class="w-1 h-1 bg-gray-400 rounded-full"></div>
+                        <div class="w-1 h-1 bg-gray-400 rounded-full"></div>
+                        <div class="w-1 h-1 bg-gray-400 rounded-full"></div>
+                    </div>
+                </div>
+
+                <div id="panelContent" class="flex flex-col items-center p-2 gap-2">
+                    <button id="btnFullscreen" class="p-2 text-gray-300 hover:text-white hover:bg-gray-600 rounded-lg transition-colors" title="Pantalla Completa">
+                        <svg id="iconFullscreen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                    </button>
+                    <div class="h-px w-full bg-gray-600"></div>
+                    <button id="btnZoomIn" class="p-2 text-gray-300 hover:text-white hover:bg-gray-600 rounded-lg transition-colors" title="Acercar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    </button>
+                    <span id="zoomText" class="text-[11px] font-bold text-gray-200 select-none w-full text-center">100%</span>
+                    <button id="btnZoomOut" class="p-2 text-gray-300 hover:text-white hover:bg-gray-600 rounded-lg transition-colors" title="Alejar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                    </button>
+                    <div class="h-px w-full bg-gray-600"></div>
+                    <button id="btnResetZoom" class="px-1 py-1.5 text-[10px] text-gray-300 hover:text-white hover:bg-gray-600 rounded-lg transition-colors text-center leading-tight font-medium" title="Restablecer">
+                        Reset<br>100%
+                    </button>
+                </div>
+
+                <button id="btnCollapse" class="w-full bg-gray-700 hover:bg-gray-600 p-1 flex items-center justify-center border-t border-gray-600 text-gray-400 hover:text-white transition-colors">
+                    <svg id="iconCollapse" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                </button>
             </div>
+
+            <!-- Contenedor con Scroll para Navegación -->
+            <div id="scrollArea" class="flex-1 w-full h-full overflow-auto flex p-4 touch-none">
+                <div id="canvasContainer" class="relative m-auto shadow-[0_0_20px_rgba(0,0,0,0.6)] rounded-lg transition-all duration-200">
+                    <div id="mazeSvgContainer" class="absolute top-0 left-0 w-full h-full rounded-lg overflow-hidden"></div>
+                    <canvas id="drawCanvas" class="absolute top-0 left-0 w-full h-full rounded-lg cursor-crosshair touch-none"></canvas>
+                </div>
+            </div>
+            
         </div>
 
     </div>
 
-    <!-- Script de lógica -->
     <script>
+        const canvasWrapper = document.getElementById('canvasWrapper');
         const container = document.getElementById('canvasContainer');
-        const mazeCanvas = document.getElementById('mazeCanvas');
+        const mazeSvgContainer = document.getElementById('mazeSvgContainer');
         const drawCanvas = document.getElementById('drawCanvas');
-        
-        const ctxMaze = mazeCanvas.getContext('2d');
         const ctxDraw = drawCanvas.getContext('2d');
-        
-        const btnGenerate = document.getElementById('btnGenerate');
-        const btnDownload = document.getElementById('btnDownload');
-        const btnClearDraw = document.getElementById('btnClearDraw');
         
         let cols, rows, w;
         let grid = [];
+        let totalWidth = 0;
+        let totalHeight = 0;
+        let zoomLevel = 1;
         
         class Cell {
             constructor(i, j) {
@@ -107,19 +144,16 @@
                 this.walls = [true, true, true, true]; 
                 this.visited = false;
             }
-
             checkNeighbors() {
                 let neighbors = [];
                 let top = grid[index(this.i, this.j - 1)];
                 let right = grid[index(this.i + 1, this.j)];
                 let bottom = grid[index(this.i, this.j + 1)];
                 let left = grid[index(this.i - 1, this.j)];
-
                 if (top && !top.visited) neighbors.push(top);
                 if (right && !right.visited) neighbors.push(right);
                 if (bottom && !bottom.visited) neighbors.push(bottom);
                 if (left && !left.visited) neighbors.push(left);
-
                 if (neighbors.length > 0) {
                     let r = Math.floor(Math.random() * neighbors.length);
                     return neighbors[r];
@@ -127,79 +161,89 @@
                     return undefined;
                 }
             }
-
-            draw() {
-                let x = this.i * w;
-                let y = this.j * w;
-                
-                ctxMaze.strokeStyle = '#000000';
-                ctxMaze.lineWidth = 2;
-                ctxMaze.lineCap = 'square';
-                
-                ctxMaze.beginPath();
-                if (this.walls[0]) { ctxMaze.moveTo(x, y); ctxMaze.lineTo(x + w, y); } 
-                if (this.walls[1]) { ctxMaze.moveTo(x + w, y); ctxMaze.lineTo(x + w, y + w); } 
-                if (this.walls[2]) { ctxMaze.moveTo(x + w, y + w); ctxMaze.lineTo(x, y + w); } 
-                if (this.walls[3]) { ctxMaze.moveTo(x, y + w); ctxMaze.lineTo(x, y); } 
-                ctxMaze.stroke();
-            }
         }
 
         function index(i, j) {
-            if (i < 0 || j < 0 || i > cols - 1 || j > rows - 1) {
-                return -1;
-            }
+            if (i < 0 || j < 0 || i > cols - 1 || j > rows - 1) return -1;
             return i + j * cols;
         }
 
         function removeWalls(a, b) {
             let x = a.i - b.i;
-            if (x === 1) {
-                a.walls[3] = false;
-                b.walls[1] = false;
-            } else if (x === -1) {
-                a.walls[1] = false;
-                b.walls[3] = false;
-            }
+            if (x === 1) { a.walls[3] = false; b.walls[1] = false; } 
+            else if (x === -1) { a.walls[1] = false; b.walls[3] = false; }
             let y = a.j - b.j;
-            if (y === 1) {
-                a.walls[0] = false;
-                b.walls[2] = false;
-            } else if (y === -1) {
-                a.walls[2] = false;
-                b.walls[0] = false;
+            if (y === 1) { a.walls[0] = false; b.walls[2] = false; } 
+            else if (y === -1) { a.walls[2] = false; b.walls[0] = false; }
+        }
+
+        function updateZoomDisplay() {
+            document.getElementById('zoomText').innerText = Math.round(zoomLevel * 100) + '%';
+            const currentZoomedWidth = totalWidth * zoomLevel;
+            const currentZoomedHeight = totalHeight * zoomLevel;
+            container.style.width = currentZoomedWidth + 'px';
+            container.style.height = currentZoomedHeight + 'px';
+        }
+
+        function setupDrawCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            drawCanvas.width = totalWidth * dpr;
+            drawCanvas.height = totalHeight * dpr;
+            ctxDraw.setTransform(1, 0, 0, 1, 0, 0); 
+            ctxDraw.scale(dpr, dpr);
+        }
+
+        // Generación del código vectorial 4:3
+        function getMazeSVG() {
+            const padding = 20;
+            let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${totalHeight}" width="100%" height="100%">\n`;
+            svg += `  <rect width="${totalWidth}" height="${totalHeight}" fill="#ffffff"/>\n`;
+
+            let startX = Math.floor(cols / 2);
+            let startY = 0;
+            let endX = Math.floor(cols / 2);
+            let endY = rows - 1;
+
+            svg += `  <g transform="translate(${padding}, ${padding})">\n`;
+            svg += `    <rect x="${startX * w + w*0.2}" y="${-w*0.2}" width="${w*0.6}" height="${w*0.4}" fill="#10b981"/>\n`;
+            svg += `    <rect x="${endX * w + w*0.2}" y="${endY * w + w - w*0.2}" width="${w*0.6}" height="${w*0.4}" fill="#ef4444"/>\n`;
+            
+            let pathData = "";
+            for (let i = 0; i < grid.length; i++) {
+                let cell = grid[i];
+                let x = cell.i * w;
+                let y = cell.j * w;
+                
+                if (cell.walls[0]) pathData += `M${x},${y} L${x + w},${y} `;
+                if (cell.walls[1]) pathData += `M${x + w},${y} L${x + w},${y + w} `;
+                if (cell.walls[2]) pathData += `M${x + w},${y + w} L${x},${y + w} `;
+                if (cell.walls[3]) pathData += `M${x},${y + w} L${x},${y} `;
             }
+
+            svg += `    <path d="${pathData.trim()}" stroke="#000000" stroke-width="4" stroke-linecap="square" fill="none"/>\n`;
+            svg += `  </g>\n`;
+            svg += `</svg>`;
+            return svg;
         }
 
         function generateMaze() {
             cols = parseInt(document.getElementById('cols').value);
-            rows = parseInt(document.getElementById('rows').value);
             w = parseInt(document.getElementById('cellSize').value);
 
-            if(cols < 5) cols = 5; if(cols > 150) cols = 150;
-            if(rows < 5) rows = 5; if(rows > 150) rows = 150;
+            if(cols < 5) cols = 5; if(cols > 100) cols = 100;
             if(w < 5) w = 5; if(w > 100) w = 100;
 
+            rows = Math.round(cols * (3 / 4));
+            if(rows < 5) rows = 5;
+
             const padding = 20; 
-            const totalWidth = (cols * w) + (padding * 2);
-            const totalHeight = (rows * w) + (padding * 2);
+            totalWidth = (cols * w) + (padding * 2);
+            totalHeight = (rows * w) + (padding * 2);
 
-            mazeCanvas.width = totalWidth;
-            mazeCanvas.height = totalHeight;
-            drawCanvas.width = totalWidth;
-            drawCanvas.height = totalHeight;
-
-            container.style.width = '100%';
-            container.style.maxWidth = totalWidth + 'px';
-            container.style.aspectRatio = `${totalWidth} / ${totalHeight}`;
-
-            ctxDraw.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-            
-            ctxMaze.fillStyle = '#ffffff';
-            ctxMaze.fillRect(0, 0, mazeCanvas.width, mazeCanvas.height);
-
-            ctxMaze.save();
-            ctxMaze.translate(padding, padding);
+            zoomLevel = 1;
+            updateZoomDisplay();
+            setupDrawCanvas();
+            ctxDraw.clearRect(0, 0, totalWidth, totalHeight);
 
             grid = [];
             for (let j = 0; j < rows; j++) {
@@ -222,7 +266,6 @@
             if (rows > 1) initialNeighbors.push(grid[index(startX, startY + 1)]);
 
             initialNeighbors.sort(() => Math.random() - 0.5);
-
             let stack = [];
 
             for (let n of initialNeighbors) {
@@ -248,19 +291,12 @@
             let endY = rows - 1;
             grid[index(endX, endY)].walls[2] = false;
 
-            for (let i = 0; i < grid.length; i++) {
-                grid[i].draw();
-            }
-
-            ctxMaze.fillStyle = '#10b981'; 
-            ctxMaze.fillRect(startX * w + w*0.2, -w*0.2, w*0.6, w*0.4);
-            
-            ctxMaze.fillStyle = '#ef4444'; 
-            ctxMaze.fillRect(endX * w + w*0.2, endY * w + w - w*0.2, w*0.6, w*0.4);
-
-            ctxMaze.restore();
+            mazeSvgContainer.innerHTML = getMazeSVG();
         }
 
+        // ==========================================
+        // DIBUJO ESCALADO A HIGH-DPI & ZOOM
+        // ==========================================
         let isDrawing = false;
 
         function getPointerPos(e) {
@@ -268,8 +304,8 @@
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             
-            const scaleX = drawCanvas.width / rect.width;
-            const scaleY = drawCanvas.height / rect.height;
+            const scaleX = totalWidth / rect.width;
+            const scaleY = totalHeight / rect.height;
 
             return {
                 x: (clientX - rect.left) * scaleX,
@@ -313,21 +349,147 @@
         drawCanvas.addEventListener('touchmove', draw, { passive: false });
         drawCanvas.addEventListener('touchend', stopDraw);
 
-        function downloadMaze() {
+        // ==========================================
+        // LÓGICA DEL PANEL FLOTANTE
+        // ==========================================
+        const panel = document.getElementById('floatingPanel');
+        const dragHandle = document.getElementById('dragHandle');
+        const panelContent = document.getElementById('panelContent');
+        const btnCollapse = document.getElementById('btnCollapse');
+        const iconCollapse = document.getElementById('iconCollapse');
+        
+        let isDraggingPanel = false, startMouseX, startMouseY, initialPanelX, initialPanelY;
+
+        dragHandle.addEventListener('mousedown', (e) => {
+            isDraggingPanel = true;
+            startMouseX = e.clientX;
+            startMouseY = e.clientY;
+            initialPanelX = panel.offsetLeft;
+            initialPanelY = panel.offsetTop;
+            panel.style.right = 'auto'; 
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDraggingPanel) return;
+            e.preventDefault();
+            const dx = e.clientX - startMouseX;
+            const dy = e.clientY - startMouseY;
+            
+            let newLeft = initialPanelX + dx;
+            let newTop = initialPanelY + dy;
+            const maxLeft = canvasWrapper.clientWidth - panel.clientWidth;
+            const maxTop = canvasWrapper.clientHeight - panel.clientHeight;
+
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            newTop = Math.max(0, Math.min(newTop, maxTop));
+
+            panel.style.left = `${newLeft}px`;
+            panel.style.top = `${newTop}px`;
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDraggingPanel = false;
+        });
+
+        let isCollapsed = false;
+        btnCollapse.addEventListener('click', () => {
+            isCollapsed = !isCollapsed;
+            if (isCollapsed) {
+                panelContent.style.display = 'none';
+                iconCollapse.classList.add('rotate-180');
+            } else {
+                panelContent.style.display = 'flex';
+                iconCollapse.classList.remove('rotate-180');
+            }
+        });
+
+
+        // ==========================================
+        // EVENTOS BOTONES ACCIÓN
+        // ==========================================
+        document.getElementById('btnGenerate').addEventListener('click', generateMaze);
+        
+        // Descarga en formato SVG Vectorial Puro
+        document.getElementById('btnDownloadSvg').addEventListener('click', () => {
+            const svgStr = getMazeSVG();
+            const blob = new Blob([svgStr], { type: "image/svg+xml" });
+            const url = URL.createObjectURL(blob);
+            
             const link = document.createElement('a');
-            link.download = `laberinto-limpio-${cols}x${rows}.png`;
-            link.href = mazeCanvas.toDataURL('image/png');
+            link.download = `laberinto-${cols}x${rows}.svg`;
+            link.href = url;
             link.click();
-        }
+            URL.revokeObjectURL(url);
+        });
 
-        // Nueva función para limpiar el trazo del usuario
-        function clearDrawing() {
-            ctxDraw.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-        }
+        // Descarga en formato PNG optimizado a 300 DPI (Factor ~4.16x para impresión de alta calidad)
+        document.getElementById('btnDownloadPng').addEventListener('click', () => {
+            const svgStr = getMazeSVG();
+            const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            
+            img.onload = function() {
+                const scale300DPI = 300 / 72; // Factor de conversión estándar para 300 DPI
+                const highResWidth = Math.round(totalWidth * scale300DPI);
+                const highResHeight = Math.round(totalHeight * scale300DPI);
 
-        btnGenerate.addEventListener('click', generateMaze);
-        btnDownload.addEventListener('click', downloadMaze);
-        btnClearDraw.addEventListener('click', clearDrawing);
+                const canvas = document.createElement('canvas');
+                canvas.width = highResWidth;
+                canvas.height = highResHeight;
+                const ctx = canvas.getContext('2d');
+                
+                // Renderizado nítido a gran escala
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, 0, 0, highResWidth, highResHeight);
+                
+                const link = document.createElement('a');
+                link.download = `laberinto-${cols}x${rows}-300dpi.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+                URL.revokeObjectURL(url);
+            };
+            img.src = url;
+        });
+
+        document.getElementById('btnClearDraw').addEventListener('click', () => {
+            ctxDraw.clearRect(0, 0, totalWidth, totalHeight);
+        });
+
+        document.getElementById('btnZoomIn').addEventListener('click', () => {
+            zoomLevel += 0.25;
+            if(zoomLevel > 4) zoomLevel = 4;
+            updateZoomDisplay();
+        });
+
+        document.getElementById('btnZoomOut').addEventListener('click', () => {
+            zoomLevel -= 0.25;
+            if(zoomLevel < 0.25) zoomLevel = 0.25;
+            updateZoomDisplay();
+        });
+
+        document.getElementById('btnResetZoom').addEventListener('click', () => {
+            zoomLevel = 1;
+            updateZoomDisplay();
+        });
+
+        document.getElementById('btnFullscreen').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                canvasWrapper.requestFullscreen().catch(err => alert(`Error: ${err.message}`));
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            const icon = document.getElementById('iconFullscreen');
+            if (document.fullscreenElement) {
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"></path>`;
+            } else {
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>`;
+            }
+        });
 
         window.onload = generateMaze;
 
