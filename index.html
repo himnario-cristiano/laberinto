@@ -9,24 +9,21 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        canvas {
-            max-width: 100%;
-            height: auto;
-            border-radius: 0.5rem;
-            background-color: white;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        /* Para evitar el scroll al dibujar en pantallas táctiles */
+        .touch-none {
+            touch-action: none;
         }
     </style>
 </head>
 <body class="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center p-4">
 
-    <div class="max-w-5xl w-full bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col md:flex-row gap-8">
+    <div class="max-w-6xl w-full bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col md:flex-row gap-8">
         
         <!-- Panel de Controles -->
         <div class="w-full md:w-1/3 flex flex-col gap-6">
             <div>
                 <h1 class="text-3xl font-bold text-white mb-2">Laberinto 3 Caminos</h1>
-                <p class="text-gray-400 text-sm">Genera un laberinto perfecto con 1 ruta correcta y 2 trampas masivas desde el inicio.</p>
+                <p class="text-gray-400 text-sm">Genera un laberinto con 1 ruta correcta y 2 trampas masivas. Dibuja encima para resolverlo, al descargar obtendrás la versión limpia.</p>
             </div>
 
             <div class="space-y-4">
@@ -49,33 +46,44 @@
                 </div>
             </div>
 
-            <div class="flex flex-col gap-3 mt-4">
-                <button id="btnGenerate" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <div class="flex flex-row md:flex-col gap-3 mt-4">
+                <button id="btnGenerate" class="flex-1 w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
-                    Generar Laberinto
+                    <span class="hidden sm:inline">Generar</span>
                 </button>
-                <button id="btnDownload" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <button id="btnDownload" class="flex-1 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                     </svg>
-                    Descargar PNG
+                    <span class="hidden sm:inline">Descargar</span>
                 </button>
             </div>
         </div>
 
-        <!-- Área del Canvas -->
-        <div class="w-full md:w-2/3 flex items-center justify-center bg-gray-900 rounded-xl border border-gray-700 p-4 overflow-hidden relative">
-            <canvas id="mazeCanvas"></canvas>
+        <!-- Área del Canvas (Doble capa) -->
+        <div class="w-full md:w-2/3 flex items-center justify-center bg-gray-900 rounded-xl border border-gray-700 p-4 overflow-hidden">
+            <!-- El contenedor maneja su relación de aspecto para no colapsar, conteniendo ambos canvases absolutos -->
+            <div id="canvasContainer" class="relative mx-auto shadow-[0_0_20px_rgba(0,0,0,0.4)] rounded-lg">
+                <!-- Capa Base: Laberinto (Fondo blanco, paredes negras) -->
+                <canvas id="mazeCanvas" class="absolute top-0 left-0 w-full h-full rounded-lg"></canvas>
+                <!-- Capa Superior: Dibujo interactivo (Transparente) -->
+                <canvas id="drawCanvas" class="absolute top-0 left-0 w-full h-full rounded-lg cursor-crosshair touch-none"></canvas>
+            </div>
         </div>
 
     </div>
 
     <!-- Script de lógica -->
     <script>
-        const canvas = document.getElementById('mazeCanvas');
-        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvasContainer');
+        const mazeCanvas = document.getElementById('mazeCanvas');
+        const drawCanvas = document.getElementById('drawCanvas');
+        
+        const ctxMaze = mazeCanvas.getContext('2d');
+        const ctxDraw = drawCanvas.getContext('2d');
+        
         const btnGenerate = document.getElementById('btnGenerate');
         const btnDownload = document.getElementById('btnDownload');
         
@@ -86,8 +94,7 @@
             constructor(i, j) {
                 this.i = i;
                 this.j = j;
-                // Paredes: [Arriba, Derecha, Abajo, Izquierda]
-                this.walls = [true, true, true, true];
+                this.walls = [true, true, true, true]; // [Arriba, Derecha, Abajo, Izquierda]
                 this.visited = false;
             }
 
@@ -115,16 +122,16 @@
                 let x = this.i * w;
                 let y = this.j * w;
                 
-                ctx.strokeStyle = '#000000'; // Paredes negras
-                ctx.lineWidth = 2;
-                ctx.lineCap = 'square';
+                ctxMaze.strokeStyle = '#000000'; // Paredes Negras
+                ctxMaze.lineWidth = 2;
+                ctxMaze.lineCap = 'square';
                 
-                ctx.beginPath();
-                if (this.walls[0]) { ctx.moveTo(x, y); ctx.lineTo(x + w, y); } // Top
-                if (this.walls[1]) { ctx.moveTo(x + w, y); ctx.lineTo(x + w, y + w); } // Right
-                if (this.walls[2]) { ctx.moveTo(x + w, y + w); ctx.lineTo(x, y + w); } // Bottom
-                if (this.walls[3]) { ctx.moveTo(x, y + w); ctx.lineTo(x, y); } // Left
-                ctx.stroke();
+                ctxMaze.beginPath();
+                if (this.walls[0]) { ctxMaze.moveTo(x, y); ctxMaze.lineTo(x + w, y); } // Top
+                if (this.walls[1]) { ctxMaze.moveTo(x + w, y); ctxMaze.lineTo(x + w, y + w); } // Right
+                if (this.walls[2]) { ctxMaze.moveTo(x + w, y + w); ctxMaze.lineTo(x, y + w); } // Bottom
+                if (this.walls[3]) { ctxMaze.moveTo(x, y + w); ctxMaze.lineTo(x, y); } // Left
+                ctxMaze.stroke();
             }
         }
 
@@ -164,14 +171,30 @@
             if(w < 5) w = 5; if(w > 100) w = 100;
 
             const padding = 20; 
-            canvas.width = (cols * w) + (padding * 2);
-            canvas.height = (rows * w) + (padding * 2);
+            const totalWidth = (cols * w) + (padding * 2);
+            const totalHeight = (rows * w) + (padding * 2);
 
-            // Fondo blanco
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Ajustar resoluciones internas de los canvas
+            mazeCanvas.width = totalWidth;
+            mazeCanvas.height = totalHeight;
+            drawCanvas.width = totalWidth;
+            drawCanvas.height = totalHeight;
 
-            ctx.translate(padding, padding);
+            // Para que los div absolutos no colapsen y mantengan el aspect ratio de la pantalla
+            container.style.width = '100%';
+            container.style.maxWidth = totalWidth + 'px';
+            container.style.aspectRatio = `${totalWidth} / ${totalHeight}`;
+
+            // Limpiar lienzos
+            ctxDraw.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+            
+            // Pintar fondo blanco en laberinto base
+            ctxMaze.fillStyle = '#ffffff';
+            ctxMaze.fillRect(0, 0, mazeCanvas.width, mazeCanvas.height);
+
+            // Mover origen para el padding
+            ctxMaze.save();
+            ctxMaze.translate(padding, padding);
 
             grid = [];
             for (let j = 0; j < rows; j++) {
@@ -181,27 +204,23 @@
                 }
             }
 
-            // === LÓGICA DE 3 RUTAS INICIALES (1 CORRECTA, 2 TRAMPAS) ===
+            // === Lógica para 3 Rutas Iniciales (1 correcta, 2 trampas) ===
             let startX = Math.floor(cols / 2);
             let startY = 0;
             let startCell = grid[index(startX, startY)];
             
-            // Marcar el inicio y abrir la pared superior
             startCell.visited = true;
-            startCell.walls[0] = false; 
+            startCell.walls[0] = false; // Abrir entrada norte
 
-            // Obtener los 3 vecinos del inicio (Izquierda, Derecha, Abajo)
             let initialNeighbors = [];
             if (startX > 0) initialNeighbors.push(grid[index(startX - 1, startY)]);
             if (startX < cols - 1) initialNeighbors.push(grid[index(startX + 1, startY)]);
             if (rows > 1) initialNeighbors.push(grid[index(startX, startY + 1)]);
 
-            // Aleatorizar el orden de las ramas
             initialNeighbors.sort(() => Math.random() - 0.5);
 
             let stack = [];
 
-            // Romper paredes hacia las 3 ramas y agregarlas al stack de DFS
             for (let n of initialNeighbors) {
                 if (n) {
                     removeWalls(startCell, n);
@@ -210,12 +229,11 @@
                 }
             }
 
-            // Continuar con Recursive Backtracking normal
+            // Backtracking recursivo tradicional
             while (stack.length > 0) {
                 let current = stack.pop();
                 let next = current.checkNeighbors();
                 if (next) {
-                    // Si tiene vecinos, lo regresamos a la pila para explorarlo luego
                     stack.push(current); 
                     removeWalls(current, next);
                     next.visited = true;
@@ -223,39 +241,100 @@
                 }
             }
 
-            // Crear Salida
+            // Crear salida sur
             let endX = Math.floor(cols / 2);
             let endY = rows - 1;
             grid[index(endX, endY)].walls[2] = false;
 
-            // Dibujar todo el laberinto
+            // Dibujar paredes
             for (let i = 0; i < grid.length; i++) {
                 grid[i].draw();
             }
 
-            // Pintar los indicadores
-            // Entrada (Verde)
-            ctx.fillStyle = '#10b981'; // Emerald 500
-            ctx.fillRect(startX * w + w*0.2, -w*0.2, w*0.6, w*0.4);
+            // Dibujar Indicadores
+            ctxMaze.fillStyle = '#10b981'; // Entrada verde
+            ctxMaze.fillRect(startX * w + w*0.2, -w*0.2, w*0.6, w*0.4);
             
-            // Salida (Rojo)
-            ctx.fillStyle = '#ef4444'; // Red 500
-            ctx.fillRect(endX * w + w*0.2, endY * w + w - w*0.2, w*0.6, w*0.4);
+            ctxMaze.fillStyle = '#ef4444'; // Salida roja
+            ctxMaze.fillRect(endX * w + w*0.2, endY * w + w - w*0.2, w*0.6, w*0.4);
 
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctxMaze.restore();
         }
 
+        // ==========================================
+        // LÓGICA DE DIBUJO EN LA CAPA SUPERIOR
+        // ==========================================
+        let isDrawing = false;
+
+        // Convierte coordenadas de pantalla a coordenadas internas del canvas
+        function getPointerPos(e) {
+            const rect = drawCanvas.getBoundingClientRect();
+            // Soporte para Mouse y Touch
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const scaleX = drawCanvas.width / rect.width;
+            const scaleY = drawCanvas.height / rect.height;
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDraw(e) {
+            e.preventDefault(); // Evitar scroll
+            isDrawing = true;
+            const pos = getPointerPos(e);
+            ctxDraw.beginPath();
+            ctxDraw.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const pos = getPointerPos(e);
+            
+            ctxDraw.lineTo(pos.x, pos.y);
+            ctxDraw.strokeStyle = 'rgba(239, 68, 68, 0.8)'; // Rojo transparente (#ef4444)
+            ctxDraw.lineWidth = w * 0.4; // Grosor proporcional al laberinto
+            ctxDraw.lineCap = 'round';
+            ctxDraw.lineJoin = 'round';
+            ctxDraw.stroke();
+        }
+
+        function stopDraw(e) {
+            if (e) e.preventDefault();
+            isDrawing = false;
+            ctxDraw.closePath();
+        }
+
+        // Eventos Mouse
+        drawCanvas.addEventListener('mousedown', startDraw);
+        drawCanvas.addEventListener('mousemove', draw);
+        drawCanvas.addEventListener('mouseup', stopDraw);
+        drawCanvas.addEventListener('mouseout', stopDraw);
+
+        // Eventos Touch
+        drawCanvas.addEventListener('touchstart', startDraw, { passive: false });
+        drawCanvas.addEventListener('touchmove', draw, { passive: false });
+        drawCanvas.addEventListener('touchend', stopDraw);
+
+        // ==========================================
+        // EXPORTACIÓN EXCLUSIVA DE LA CAPA INFERIOR
+        // ==========================================
         function downloadMaze() {
             const link = document.createElement('a');
-            link.download = `laberinto-trampas-${cols}x${rows}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.download = `laberinto-limpio-${cols}x${rows}.png`;
+            // Exporta EXCLUSIVAMENTE el canvas inferior (sin los trazos)
+            link.href = mazeCanvas.toDataURL('image/png');
             link.click();
         }
 
         btnGenerate.addEventListener('click', generateMaze);
         btnDownload.addEventListener('click', downloadMaze);
 
-        // Auto-generar al cargar
+        // Generar inicial
         window.onload = generateMaze;
 
     </script>
